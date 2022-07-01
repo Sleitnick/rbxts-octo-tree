@@ -6,7 +6,6 @@ type Region = {
 	Parent: Region?;
 	Level: number;
 	Nodes: {Node}?;
-	DEBUG: BasePart?;
 }
 
 type Node = {
@@ -16,12 +15,7 @@ type Node = {
 }
 
 local MAX_SUB_REGIONS = 4
-
-local DEBUG_OCTREE = true
-
-local DEBUG_FOLDER = Instance.new("Folder")
-DEBUG_FOLDER.Name = "DEBUG"
-DEBUG_FOLDER.Parent = if DEBUG_OCTREE then workspace else nil
+local DEFAULT_TOP_REGION_SIZE = 512
 
 local function IsPointInBox(point: Vector3, boxCenter: Vector3, boxSize: number)
 	local half = boxSize / 2
@@ -47,11 +41,63 @@ end
 local Octree = {}
 Octree.__index = Octree
 
-function Octree.new(size: number)
+function Octree.new(size: number?)
 	local self = setmetatable({}, Octree)
-	self.Size = size
+	self.Size = if size then size else DEFAULT_TOP_REGION_SIZE
 	self.Regions = {} :: {Region}
 	return self
+end
+
+function Octree:ClearAllNodes()
+	table.clear(self.Regions)
+end
+
+function Octree:GetAllNodes(): {Node}
+	local all = {}
+	local function GetNodes(regions)
+		for _,region in regions do
+			local nodes = region.Nodes
+			if nodes then
+				table.move(nodes, 1, #nodes, #all + 1, all)
+			else
+				GetNodes(region.Regions)
+			end
+		end
+	end
+	GetNodes(self.Regions)
+	return all
+end
+
+function Octree:ForEachNode(): () -> Node?
+	local function GetNodes(regions)
+		for _,region in regions do
+			local nodes = region.Nodes
+			if nodes then
+				for _,node in nodes do
+					coroutine.yield(node)
+				end
+			else
+				GetNodes(region.Regions)
+			end
+		end
+	end
+	local getNextNode = coroutine.wrap(GetNodes)
+	return function(): Node?
+		return getNextNode()
+	end
+end
+
+function Octree:FindFirstNode(object: any): Node?
+	for node: Node in self:ForEachNode() do
+		if node.Object == object then
+			return node
+		end
+	end
+	return nil
+end
+
+function Octree:CountNodes()
+	return #self:GetAllNodes()
 end
 
 function Octree:CreateNode(position: Vector3, object: any)
@@ -83,10 +129,6 @@ function Octree:RemoveNode(node: Node)
 					local regionIndex = table.find(parent.Regions, region)
 					if regionIndex then
 						SwapRemove(parent.Regions, regionIndex)
-						if region.DEBUG then
-							region.DEBUG:Destroy()
-							region.DEBUG = nil
-						end
 					end
 				end
 			end
@@ -133,7 +175,11 @@ end
 
 function Octree:GetNearest(position: Vector3, radius: number, maxNodes: number?)
 	local nodes = self:RadiusSearch(position, radius, maxNodes)
-	table.sort(nodes)
+	table.sort(nodes, function(n0: Node, n1: Node)
+		local d0 = (n0.Position - position).Magnitude
+		local d1 = (n1.Position - position).Magnitude
+		return d0 < d1
+	end)
 	if maxNodes ~= nil and #nodes > maxNodes then
 		return table.move(nodes, 1, maxNodes, 1, table.create(maxNodes))
 	end
@@ -204,6 +250,7 @@ function Octree:_getTopRegion(position: Vector3)
 			Radius = math.sqrt(size * size + size * size + size * size),
 			Center = origin,
 		}
+		table.freeze(region)
 		self.Regions[key] = region
 	end
 	return region
@@ -246,28 +293,9 @@ function Octree:_getRegion(maxLevel: number, position: Vector3): Region
 				Parent = regionParent,
 				Nodes = if level == MAX_SUB_REGIONS then {} else nil,
 			}
+			table.freeze(newRegion)
 			table.insert(regions, newRegion)
 			region = newRegion
-			
-			if DEBUG_OCTREE then
-				local DEBUG = Instance.new("Part")
-				DEBUG.Name = "RegionDebug"
-				DEBUG.Transparency = 0.7
-				DEBUG.Material = Enum.Material.SmoothPlastic
-				DEBUG.TopSurface = Enum.SurfaceType.Smooth
-				DEBUG.BottomSurface = Enum.SurfaceType.Smooth
-				DEBUG.Anchored = true
-				DEBUG.CanTouch = false
-				DEBUG.CanQuery = false
-				DEBUG.CanCollide = false
-				local rng = Random.new(center.X * center.Y * center.Z)
-				DEBUG.Color = Color3.new(rng:NextNumber(), rng:NextNumber(), rng:NextNumber())
-				DEBUG.Size = Vector3.new(size, size, size)
-				DEBUG.CFrame = CFrame.new(center)
-				DEBUG.CastShadow = false
-				DEBUG.Parent = DEBUG_FOLDER
-				newRegion.DEBUG = DEBUG
-			end
 			
 		end
 		if level == maxLevel then
