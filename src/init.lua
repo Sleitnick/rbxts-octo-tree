@@ -41,9 +41,9 @@ end
 local Octree = {}
 Octree.__index = Octree
 
-function Octree.new(size: number?)
+function Octree.new(topRegionSize: number?)
 	local self = setmetatable({}, Octree)
-	self.Size = if size then size else DEFAULT_TOP_REGION_SIZE
+	self.Size = if topRegionSize then topRegionSize else DEFAULT_TOP_REGION_SIZE
 	self.Regions = {} :: {Region}
 	return self
 end
