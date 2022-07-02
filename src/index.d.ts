@@ -1,13 +1,12 @@
 /**
  * An Octree node that holds the object and position of
- * the node.
  *
- * Do **not** change the `Position`. Instead, change the
- * position by calling `octree.ChangeNodePosition(node, pos)`.
+ * To change the position of a node, go through the
+ * `octree.ChangeNodePosition()` method.
  */
-declare interface Node<T> {
-	Position: Vector3;
-	Object: T;
+interface Node<T> {
+	readonly Position: Vector3;
+	readonly Object: T;
 }
 
 declare interface Octree<T> {
@@ -29,8 +28,10 @@ declare interface Octree<T> {
 	/**
 	 * Changes the position of the node. This will write the `.Position` property
 	 * of the given node, and will internally reposition the node into the correct
-	 * subregion. Do **not** set the `.Position` property itself; doing so will not
-	 * actually change the node position. Go through this method instead.
+	 * subregion.
+	 *
+	 * Changing the position of a node can be an expensive operation and should only
+	 * be done if necessary.
 	 * @param node The node to change.
 	 * @param position The new position for the node.
 	 */
@@ -98,7 +99,7 @@ declare interface Octree<T> {
 	GetNearest(position: Vector3, radius: number, maxNodes?: number): Array<Node<T>>;
 }
 
-declare interface OctreeConstructor {
+interface OctreeConstructor {
 	/**
 	 * Constructs a new octree.
 	 *
