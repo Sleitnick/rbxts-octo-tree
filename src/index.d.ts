@@ -1,15 +1,16 @@
 /**
- * An Octree node that holds the object and position of
+ * An octree node represents a point in 3D space within an octree,
+ * along with an arbitrary object attached to it.
  *
  * To change the position of a node, go through the
  * `octree.ChangeNodePosition()` method.
  */
-interface Node<T> {
+export interface Node<T> {
 	readonly Position: Vector3;
 	readonly Object: T;
 }
 
-declare interface Octree<T> {
+interface Octree<T> {
 	/**
 	 * Creates a new octree node at the given position and with the given object
 	 * @param position Position of the node.
@@ -113,4 +114,4 @@ interface OctreeConstructor {
  * Octree implementation for Roblox game development.
  */
 declare const Octree: OctreeConstructor;
-export { Octree, Node };
+export { Octree };
