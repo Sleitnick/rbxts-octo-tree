@@ -38,6 +38,90 @@ local function SwapRemove(tbl, index)
 	tbl[n] = nil
 end
 
+local function CountNodesInRegion(region: Region)
+	local n = 0
+	if region.Nodes then
+		return #region.Nodes
+	else
+		for _,subRegion in ipairs(region.Regions) do
+			n += CountNodesInRegion(subRegion)
+		end
+	end
+	return n
+end
+
+local function GetTopRegion(octree, position: Vector3)
+	local size = octree.Size
+	local origin = Vector3.new(
+		RoundTo(position.X, size),
+		RoundTo(position.Y, size),
+		RoundTo(position.Z, size)
+	)
+	-- Unique key to represent the top-level region:
+	-- local key = origin.X .. "_" .. origin.Y .. "_" .. origin.Z
+	local key = origin -- vectors can now be used as keys
+	local region = octree.Regions[key]
+	if not region then
+		region = {
+			Regions = {},
+			Level = 1,
+			Size = size,
+			Radius = math.sqrt(size * size + size * size + size * size),
+			Center = origin,
+		}
+		table.freeze(region)
+		octree.Regions[key] = region
+	end
+	return region
+end
+
+local function GetRegionsInRadius(octree, position: Vector3, radius: number)
+	local regionsFound = {}
+	local function ScanRegions(regions: {Region})
+		-- Find regions that have overlapping radius values
+		for _,region in ipairs(regions) do
+			local distance = (position - region.Center).Magnitude
+			if distance < (radius + region.Radius) then
+				if region.Nodes then
+					-- table.insert(regionsFound, region)
+					regionsFound[#regionsFound + 1] = region
+				else
+					ScanRegions(region.Regions)
+				end
+			end
+		end
+	end
+	local startRegions = {}
+	if radius < octree.Size * 1.5 then
+		-- Find all surrounding regions in a 3x3 cube:
+		for i = 0,26 do
+			-- Get surrounding regions:
+			local x = i % 3 - 1
+			local y = math.floor(i / 9) - 1
+			local z = math.floor(i / 3) % 3 - 1
+			local offset = Vector3.new(x * radius, y * radius, z * radius)
+			local startRegion = GetTopRegion(octree, position + offset)
+			if not startRegions[startRegion] then
+				startRegions[startRegion] = true
+				ScanRegions(startRegion.Regions)
+			end
+		end
+	else
+		-- If radius is larger than the surrounding regions will detect, then
+		-- we need to use a different algorithm to pickup the regions. Ideally,
+		-- we won't be querying with huge radius values, but this is here in
+		-- cases where that happens. Just scan all top-level regions and check
+		-- the distance.
+		for _,region in octree.Regions do
+			local distance = (position - region.Center).Magnitude
+			if distance < (radius + region.Radius) then
+				ScanRegions(region.Regions)
+			end
+		end
+	end
+	return regionsFound
+end
+
 local Octree = {}
 Octree.__index = Octree
 
@@ -124,7 +208,7 @@ function Octree:RemoveNode(node: Node)
 		while region do
 			local parent = region.Parent
 			if parent then
-				local numNodes = self:_countNodesInRegion(region)
+				local numNodes = CountNodesInRegion(region)
 				if numNodes == 0 then
 					local regionIndex = table.find(parent.Regions, region)
 					if regionIndex then
@@ -136,18 +220,6 @@ function Octree:RemoveNode(node: Node)
 		end
 	end
 	node.Region = nil
-end
-
-function Octree:_countNodesInRegion(region: Region): number
-	local n = 0
-	if region.Nodes then
-		return #region.Nodes
-	else
-		for _,subRegion in region.Regions do
-			n += self:_countNodesInRegion(subRegion)
-		end
-	end
-	return n
 end
 
 function Octree:ChangeNodePosition(node: Node, position: Vector3)
@@ -162,11 +234,12 @@ end
 
 function Octree:RadiusSearch(position: Vector3, radius: number)
 	local nodes = {}
-	local regions = self:_getRegionsInRadius(position, radius)
-	for _,region in regions do
-		for _,node in region.Nodes do
+	local regions = GetRegionsInRadius(self, position, radius)
+	for _,region in ipairs(regions) do
+		for _,node in ipairs(region.Nodes) do
 			if (node.Position - position).Magnitude < radius then
-				table.insert(nodes, node)
+				-- table.insert(nodes, node)
+				nodes[#nodes + 1] = node
 			end
 		end
 	end
@@ -184,76 +257,6 @@ function Octree:GetNearest(position: Vector3, radius: number, maxNodes: number?)
 		return table.move(nodes, 1, maxNodes, 1, table.create(maxNodes))
 	end
 	return nodes
-end
-
-function Octree:_getRegionsInRadius(position: Vector3, radius: number)
-	local regionsFound = {}
-	local function ScanRegions(regions: {Region})
-		-- Find regions that have overlapping radius values
-		for _,region in regions do
-			local distance = (position - region.Center).Magnitude
-			if distance < (radius + region.Radius) then
-				if region.Nodes then
-					table.insert(regionsFound, region)
-				else
-					ScanRegions(region.Regions)
-				end
-			end
-		end
-	end
-	local startRegions = {}
-	if radius < self.Size * 1.5 then
-		-- Find all surrounding regions in a 3x3 cube:
-		for i = 0,26 do
-			-- Get surrounding regions:
-			local x = i % 3 - 1
-			local y = math.floor(i / 9) - 1
-			local z = math.floor(i / 3) % 3 - 1
-			local offset = Vector3.new(x * radius, y * radius, z * radius)
-			local startRegion = self:_getTopRegion(position + offset)
-			if not startRegions[startRegion] then
-				startRegions[startRegion] = true
-				ScanRegions(startRegion.Regions)
-			end
-		end
-	else
-		-- If radius is larger than the surrounding regions will detect, then
-		-- we need to use a different algorithm to pickup the regions. Ideally,
-		-- we won't be querying with huge radius values, but this is here in
-		-- cases where that happens. Just scan all top-level regions and check
-		-- the distance.
-		for _,region in self.Regions do
-			local distance = (position - region.Center).Magnitude
-			if distance < (radius + region.Radius) then
-				ScanRegions(region.Regions)
-			end
-		end
-	end
-	return regionsFound
-end
-
-function Octree:_getTopRegion(position: Vector3)
-	local size = self.Size
-	local origin = Vector3.new(
-		RoundTo(position.X, size),
-		RoundTo(position.Y, size),
-		RoundTo(position.Z, size)
-	)
-	-- Unique key to represent the top-level region:
-	local key = origin.X .. "_" .. origin.Y .. "_" .. origin.Z
-	local region = self.Regions[key]
-	if not region then
-		region = {
-			Regions = {},
-			Level = 1,
-			Size = size,
-			Radius = math.sqrt(size * size + size * size + size * size),
-			Center = origin,
-		}
-		table.freeze(region)
-		self.Regions[key] = region
-	end
-	return region
 end
 
 function Octree:_getRegion(maxLevel: number, position: Vector3): Region
@@ -306,7 +309,7 @@ function Octree:_getRegion(maxLevel: number, position: Vector3): Region
 			return GetRegion((region :: Region), (region :: Region).Regions, level + 1)
 		end
 	end
-	local startRegion = self:_getTopRegion(position)
+	local startRegion = GetTopRegion(self, position)
 	return GetRegion(startRegion, startRegion.Regions, 2)
 end
 
