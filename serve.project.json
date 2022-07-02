@@ -1,0 +1,12 @@
+{
+	"name": "octo-tree-serve",
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+			"OctoTree": {
+				"$path": "default.project.json"
+			}
+		}
+	}
+}
