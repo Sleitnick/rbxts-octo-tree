@@ -6,3 +6,5 @@ license = "MIT"
 authors = ["Stephen Leitnick"]
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
+exclude = ["**"]
+include = ["out", "out/**/*.lua", "wally.toml", "wally.lock", "default.project.json"]
