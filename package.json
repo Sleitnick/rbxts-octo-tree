@@ -1,5 +1,5 @@
 {
-  "name": "@rbxts/octree",
+  "name": "@rbxts/octo-tree",
   "version": "0.1.0",
   "description": "Octree implementation",
   "main": "out/init.lua",

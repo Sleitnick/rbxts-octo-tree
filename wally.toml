@@ -1,5 +1,5 @@
 [package]
-name = "sleitnick/octree"
+name = "sleitnick/octo-tree"
 description = "Octree implementation"
 version = "0.1.0"
 license = "MIT"
