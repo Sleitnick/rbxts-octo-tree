@@ -154,7 +154,7 @@ end
 
 function Octree:ForEachNode(): () -> Node?
 	local function GetNodes(regions)
-		for _,region in regions do
+		for _,region in regions or self.Regions do
 			local nodes = region.Nodes
 			if nodes then
 				for _,node in nodes do
