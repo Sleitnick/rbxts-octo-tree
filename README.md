@@ -87,14 +87,22 @@ if (node !== undefined) {}
 ```
 Finds the first node in the octree that has the same object. If no object is found, `undefined` is returned instead.
 
-### `RadiusSearch`
+### `SearchRadius`
 ```ts
-RadiusSearch(position: Vector3, radius: number): Array<Node<T>>;
+SearchRadius(position: Vector3, radius: number): Array<Node<T>>;
 
 const nearbyNodes = octree.RadiusSearch(somePosition, 200);
 for (const node of nearbyNodes) {}
 ```
 Performs a search for all nodes within the given radius. An array of all the nodes found is returned.
+
+### `ForEachInRadius`
+```ts
+ForEachInRadius(position: Vector3, radius: number): IterableFunction<Octree.Node<T>>;
+
+for (const node of octree.ForEachInRadius(somePosition, 200)) {}
+```
+Same as `SearchRadius`, except an iterator function is returned instead of a table. Unless a table of nodes is needed, `ForEachInRadius` will be faster than `SearchRadius` (because no table allocations are needed).
 
 ### `GetNearest`
 ```ts

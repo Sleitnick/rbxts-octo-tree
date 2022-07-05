@@ -99,7 +99,23 @@ interface Octree<T> {
 	 * @param position The central position to look around.
 	 * @param radius The radius around the position.
 	 */
-	RadiusSearch(position: Vector3, radius: number): Array<Octree.Node<T>>;
+	SearchRadius(position: Vector3, radius: number): Array<Octree.Node<T>>;
+
+	/**
+	 * Same as `SearchRadius`, except an iterator function is returned instead
+	 * of a table. Unless a table of nodes is needed, using `ForEachInRadius`
+	 * will be faster than `SearchRadius` (because no table allocations are needed).
+	 *
+	 * ```ts
+	 * for (const node of octree.ForEachInRadius(position, radius)) {
+	 * 	print(node);
+	 * }
+	 * ```
+	 *
+	 * @param position The central position to look around.
+	 * @param radius The radius around the position.
+	 */
+	ForEachInRadius(position: Vector3, radius: number): IterableFunction<Octree.Node<T>>;
 
 	/**
 	 * Returns a sorted list of nodes from closest to farthest. This is

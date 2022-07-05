@@ -83,8 +83,7 @@ local function GetRegionsInRadius(octree, position: Vector3, radius: number)
 			local distance = (position - region.Center).Magnitude
 			if distance < (radius + region.Radius) then
 				if region.Nodes then
-					-- table.insert(regionsFound, region)
-					regionsFound[#regionsFound + 1] = region
+					table.insert(regionsFound, region)
 				else
 					ScanRegions(region.Regions)
 				end
@@ -165,10 +164,7 @@ function Octree:ForEachNode(): () -> Node?
 			end
 		end
 	end
-	local getNextNode = coroutine.wrap(GetNodes)
-	return function(): Node?
-		return getNextNode()
-	end
+	return coroutine.wrap(GetNodes)
 end
 
 function Octree:FindFirstNode(object: any): Node?
@@ -180,11 +176,11 @@ function Octree:FindFirstNode(object: any): Node?
 	return nil
 end
 
-function Octree:CountNodes()
+function Octree:CountNodes(): number
 	return #self:GetAllNodes()
 end
 
-function Octree:CreateNode(position: Vector3, object: any)
+function Octree:CreateNode(position: Vector3, object: any): Node
 	local region = self:_getRegion(MAX_SUB_REGIONS, position)
 	local node: Node = {
 		Region = region,
@@ -232,21 +228,34 @@ function Octree:ChangeNodePosition(node: Node, position: Vector3)
 	table.insert(newRegion.Nodes, node)
 end
 
-function Octree:RadiusSearch(position: Vector3, radius: number)
+function Octree:SearchRadius(position: Vector3, radius: number): {Node}
 	local nodes = {}
 	local regions = GetRegionsInRadius(self, position, radius)
 	for _,region in ipairs(regions) do
 		for _,node in ipairs(region.Nodes) do
 			if (node.Position - position).Magnitude < radius then
-				-- table.insert(nodes, node)
-				nodes[#nodes + 1] = node
+				table.insert(nodes, node)
 			end
 		end
 	end
 	return nodes
 end
 
-function Octree:GetNearest(position: Vector3, radius: number, maxNodes: number?)
+function Octree:ForEachInRadius(position: Vector3, radius: number): () -> Node?
+	local regions = GetRegionsInRadius(self, position, radius)
+	local function ForEach()
+		for _,region in ipairs(regions) do
+			for _,node in ipairs(region.Nodes) do
+				if (node.Position - position).Magnitude < radius then
+					coroutine.yield(node)
+				end
+			end
+		end
+	end
+	return coroutine.wrap(ForEach)
+end
+
+function Octree:GetNearest(position: Vector3, radius: number, maxNodes: number?): {Node}
 	local nodes = self:RadiusSearch(position, radius, maxNodes)
 	table.sort(nodes, function(n0: Node, n1: Node)
 		local d0 = (n0.Position - position).Magnitude
