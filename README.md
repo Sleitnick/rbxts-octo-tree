@@ -14,10 +14,10 @@ interface Node<T> {
 
 ## Constructor
 ```ts
-Octree.new();
-Octree.new(topRegionSize: number);
+Octree.new<T>();
+Octree.new<T>(topRegionSize: number);
 ```
-In most cases, it is preferred to leave out the `topRegionSize` and use the default.
+In most cases, it is preferred to leave out the `topRegionSize` and use the default. Type `T` represents the arbitrary object that is held within each node.
 
 ## Methods
 ### `CreateNode`
