@@ -120,7 +120,7 @@ interface Octree<T> {
 
 	/**
 	 * Returns a sorted list of nodes from closest to farthest. This is
-	 * similar to `RadiusSearch`, except the returned nodes are sorted
+	 * similar to `SearchRadius`, except the returned nodes are sorted
 	 *  by distance and trimmed to the `maxNodes` length (if provided).
 	 * @param position The central position to look around.
 	 * @param radius The radius around the position.

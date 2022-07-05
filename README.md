@@ -111,4 +111,4 @@ GetNearest(position: Vector3, radius: number, maxNodes?: number): Array<Node<T>>
 const topTenNearest = octree.GetNearest(somePosition, 200, 10);
 for (const node of topTenNearest) {}
 ```
-Performs a radius search (same as the `RadiusSearch()` method), but sorts the nodes by distance. If the `maxNodes` parameter is used, the amount of nodes returned will be limited to that number.
+Performs a radius search (same as the `SearchRadius()` method), but sorts the nodes by distance. If the `maxNodes` parameter is used, the amount of nodes returned will be limited to that number.
