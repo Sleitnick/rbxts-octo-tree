@@ -50,7 +50,7 @@ local function CountNodesInRegion(region: Region)
 	return n
 end
 
-local function GetTopRegion(octree, position: Vector3)
+local function GetTopRegion(octree, position: Vector3, create: boolean)
 	local size = octree.Size
 	local origin = Vector3.new(
 		RoundTo(position.X, size),
@@ -61,7 +61,7 @@ local function GetTopRegion(octree, position: Vector3)
 	-- local key = origin.X .. "_" .. origin.Y .. "_" .. origin.Z
 	local key = origin -- vectors can now be used as keys
 	local region = octree.Regions[key]
-	if not region then
+	if not region and create then
 		region = {
 			Regions = {},
 			Level = 1,
@@ -91,7 +91,9 @@ local function GetRegionsInRadius(octree, position: Vector3, radius: number)
 		end
 	end
 	local startRegions = {}
-	if radius < octree.Size * 1.5 then
+	local size = octree.Size
+	local maxOffset = math.ceil(radius / size)
+	if radius < octree.Size then
 		-- Find all surrounding regions in a 3x3 cube:
 		for i = 0,26 do
 			-- Get surrounding regions:
@@ -99,10 +101,24 @@ local function GetRegionsInRadius(octree, position: Vector3, radius: number)
 			local y = math.floor(i / 9) - 1
 			local z = math.floor(i / 3) % 3 - 1
 			local offset = Vector3.new(x * radius, y * radius, z * radius)
-			local startRegion = GetTopRegion(octree, position + offset)
-			if not startRegions[startRegion] then
+			local startRegion = GetTopRegion(octree, position + offset, false)
+			if startRegion and not startRegions[startRegion] then
 				startRegions[startRegion] = true
 				ScanRegions(startRegion.Regions)
+			end
+		end
+	elseif maxOffset <= 3 then
+		-- Find all surrounding regions:
+		for x = -maxOffset,maxOffset do
+			for y = -maxOffset,maxOffset do
+				for z = -maxOffset,maxOffset do
+					local offset = Vector3.new(x * size, y * size, z * size)
+					local startRegion = GetTopRegion(octree, position + offset, false)
+					if startRegion and not startRegions[startRegion] then
+						startRegions[startRegion] = true
+						ScanRegions(startRegion.Regions)
+					end
+				end
 			end
 		end
 	else
@@ -318,7 +334,7 @@ function Octree:_getRegion(maxLevel: number, position: Vector3): Region
 			return GetRegion((region :: Region), (region :: Region).Regions, level + 1)
 		end
 	end
-	local startRegion = GetTopRegion(self, position)
+	local startRegion = GetTopRegion(self, position, true)
 	return GetRegion(startRegion, startRegion.Regions, 2)
 end
 
