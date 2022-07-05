@@ -259,7 +259,7 @@ end
 
 function Octree:ForEachInRadius(position: Vector3, radius: number): () -> Node?
 	local regions = GetRegionsInRadius(self, position, radius)
-	local function ForEach()
+	return coroutine.wrap(function()
 		for _,region in ipairs(regions) do
 			for _,node in ipairs(region.Nodes) do
 				if (node.Position - position).Magnitude < radius then
@@ -267,8 +267,7 @@ function Octree:ForEachInRadius(position: Vector3, radius: number): () -> Node?
 				end
 			end
 		end
-	end
-	return coroutine.wrap(ForEach)
+	end)
 end
 
 function Octree:GetNearest(position: Vector3, radius: number, maxNodes: number?): {Node}
