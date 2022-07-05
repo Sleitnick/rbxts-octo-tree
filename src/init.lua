@@ -271,7 +271,7 @@ function Octree:ForEachInRadius(position: Vector3, radius: number): () -> Node?
 end
 
 function Octree:GetNearest(position: Vector3, radius: number, maxNodes: number?): {Node}
-	local nodes = self:RadiusSearch(position, radius, maxNodes)
+	local nodes = self:SearchRadius(position, radius, maxNodes)
 	table.sort(nodes, function(n0: Node, n1: Node)
 		local d0 = (n0.Position - position).Magnitude
 		local d1 = (n1.Position - position).Magnitude
