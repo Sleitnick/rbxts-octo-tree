@@ -91,7 +91,7 @@ Finds the first node in the octree that has the same object. If no object is fou
 ```ts
 SearchRadius(position: Vector3, radius: number): Array<Node<T>>;
 
-const nearbyNodes = octree.RadiusSearch(somePosition, 200);
+const nearbyNodes = octree.SearchRadius(somePosition, 200);
 for (const node of nearbyNodes) {}
 ```
 Performs a search for all nodes within the given radius. An array of all the nodes found is returned.
