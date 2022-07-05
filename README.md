@@ -17,7 +17,7 @@ interface Node<T> {
 Octree.new<T>();
 Octree.new<T>(topRegionSize: number);
 ```
-In most cases, it is preferred to leave out the `topRegionSize` and use the default. Type `T` represents the arbitrary object that is held within each node.
+In most cases, it is preferred to leave out the `topRegionSize` and use the default. The `topRegionSize` represents the cubic size of the top-level regions. By default, this is set to `512`, which means the top-level regions have a 3D size of `512x512x512`. Type `T` represents the arbitrary object that is held within each node.
 
 ## Methods
 ### `CreateNode`

@@ -17,6 +17,7 @@ declare namespace Octree {
 		 *
 		 * The `topRegionSize` defaults to `512`, which should be fine for
 		 * most applications, but can be set to a different number if desired.
+		 * This refers to the cubic size of the top-level regions in 3D space.
 		 */
 		new <T>(topRegionSize?: number): Octree<T>;
 	}
