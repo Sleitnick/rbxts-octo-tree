@@ -6,7 +6,9 @@
   "scripts": {
     "build": "rbxtsc",
     "watch": "rbxtsc -w",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "postpublish": "npm run wally:publish",
+    "wally:publish": "wally publish"
   },
   "keywords": ["octree"],
   "author": "sleitnick",
