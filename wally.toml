@@ -1,7 +1,7 @@
 [package]
 name = "sleitnick/octo-tree"
 description = "Octree implementation"
-version = "0.2.2"
+version = "0.2.3"
 license = "MIT"
 authors = ["Stephen Leitnick"]
 registry = "https://github.com/UpliftGames/wally-index"
