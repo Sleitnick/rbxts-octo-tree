@@ -9,6 +9,10 @@
 		"editor.defaultFormatter": "dbaeumer.vscode-eslint",
 		"editor.formatOnSave": true
 	},
+	"[lua]": {
+		"editor.defaultFormatter": "JohnnyMorganz.stylua",
+		"editor.formatOnSave": true
+	},
 	"eslint.run": "onType",
 	"eslint.format.enable": true
 }
