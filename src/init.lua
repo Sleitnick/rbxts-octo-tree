@@ -52,10 +52,7 @@ end
 local function GetTopRegion(octree, position: Vector3, create: boolean)
 	local size = octree.Size
 	local origin = Vector3.new(RoundTo(position.X, size), RoundTo(position.Y, size), RoundTo(position.Z, size))
-	-- Unique key to represent the top-level region:
-	-- local key = origin.X .. "_" .. origin.Y .. "_" .. origin.Z
-	local key = origin -- vectors can now be used as keys
-	local region = octree.Regions[key]
+	local region = octree.Regions[origin]
 	if not region and create then
 		region = {
 			Regions = {},
@@ -65,7 +62,7 @@ local function GetTopRegion(octree, position: Vector3, create: boolean)
 			Center = origin,
 		}
 		table.freeze(region)
-		octree.Regions[key] = region
+		octree.Regions[origin] = region
 	end
 	return region
 end
