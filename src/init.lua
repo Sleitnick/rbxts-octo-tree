@@ -235,6 +235,7 @@ function Octree:ChangeNodePosition(node: Node, position: Vector3)
 		return
 	end
 	self:RemoveNode(node)
+	node.Region = newRegion
 	table.insert(newRegion.Nodes, node)
 end
 
