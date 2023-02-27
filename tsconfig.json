@@ -15,6 +15,7 @@
 		"strict": true,
 		"target": "ESNext",
 		"typeRoots": ["node_modules/@rbxts"],
+		"moduleDetection": "force",
 
 		// configurable
 		"rootDir": "src",
