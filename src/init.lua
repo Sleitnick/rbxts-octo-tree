@@ -234,9 +234,9 @@ function Octree:ChangeNodePosition(node: Node, position: Vector3)
 	if newRegion == node.Region then
 		return
 	end
+	table.insert(newRegion.Nodes, node)
 	self:RemoveNode(node)
 	node.Region = newRegion
-	table.insert(newRegion.Nodes, node)
 end
 
 function Octree:SearchRadius(position: Vector3, radius: number): { Node }
